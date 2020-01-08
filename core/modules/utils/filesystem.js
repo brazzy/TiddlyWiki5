@@ -13,7 +13,8 @@ File system utilities
 "use strict";
 
 var fs = require("fs"),
-	path = require("path");
+	path = require("path"),
+	jimp = require("jimp");
 
 /*
 Recursively (and synchronously) copy a directory and all its content
@@ -302,12 +303,46 @@ Save a tiddler to a file described by the fileInfo:
 	type: the type of the tiddler file (NOT the type of the tiddler)
 	hasMetaFile: true if the file also has a companion .meta file
 */
-exports.saveTiddlerToFile = function(tiddler,fileInfo,callback) {
+exports.saveTiddlerToFile = async function(tiddler,fileInfo,callback) {
 	$tw.utils.createDirectory(path.dirname(fileInfo.filepath));
 	if(fileInfo.hasMetaFile) {
+		var textToSave = tiddler.fields.text;
+		/**
+		 * Brazzy: erste Variante vom Skalieren/Autorotieren von Bildinhalten plus Erzeugung von Thumbnails im files-Verzeichnis.
+		 * Alles Serverseitig. Nachteile: 
+		 * - Entspricht nicht wirklich der Philosophie von TiddlyWiki 
+		 * - Erfordert Änderungen im Basiscode UND dem Wiki-Code (image picker) ohne ein Plugin zu sein
+		 * - Die Änderung des Bildinhalts ist auf dem Client erst nach einem Reload sichtbar, und die 
+		 **/
+		if(tiddler.fields.type.startsWith("image/")){
+			const MAX_WIDTH = 950;
+			try {
+				var buffer = Buffer.from(textToSave, 'base64')
+				var image = await jimp.read(buffer);
+				image.quality(70);
+
+				if(image.bitmap.width > MAX_WIDTH) {
+					// Brazzy: Foto herunterskalieren und automatisch rotieren
+					console.log("Size before: " + textToSave.length);
+					await image.resize(MAX_WIDTH, jimp.AUTO);
+					textToSave = await image.getBase64Async(tiddler.fields.type);
+					textToSave = textToSave.substring("data:image/jpeg;base64,".length);
+					console.log("Size after: " + textToSave.length);
+					$tw.wiki.replaceTiddlerContent(tiddler, textToSave);
+				}
+
+				await image.resize(50, jimp.AUTO); // Brazzy: Thumbnail erzeugen
+				console.log("Writing thumbnail for " + tiddler.fields.title);
+				await image.writeAsync(fileInfo.filepath.replace(RegExp(path.sep.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&") + "tiddlers" + path.sep.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&") + '.*$'), "/files/thumbnail_" + tiddler.fields.title));
+				
+			} catch(err) {
+				console.log('Error caught: ', err);
+			}
+		}
+		
 		// Save the tiddler as a separate body and meta file
 		var typeInfo = $tw.config.contentTypeInfo[tiddler.fields.type || "text/plain"] || {encoding: "utf8"};
-		fs.writeFile(fileInfo.filepath,tiddler.fields.text,typeInfo.encoding,function(err) {
+		fs.writeFile(fileInfo.filepath,textToSave,typeInfo.encoding,function(err) {
 			if(err) {
 				return callback(err);
 			}

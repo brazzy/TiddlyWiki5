@@ -1053,6 +1053,13 @@ $tw.Wiki = function(options) {
 	this.getIndexer = function(name) {
 		return indexersByName[name] || null;
 	};
+	
+	// Brazzy: Ersetze den Inhalt einens Tiddlers - es wird aber nichts indiziert und keine events erzeugt
+	this.replaceTiddlerContent = function(tiddler, newContent) {
+		var title = tiddler.fields.title;
+		console.log("Ersetze " + title);
+		tiddlers[title] = new $tw.Tiddler(tiddler, {"text": newContent});
+	}
 
 	// Add a tiddler to the store
 	this.addTiddler = function(tiddler) {
@@ -2245,7 +2252,7 @@ $tw.boot.startup = function(options) {
 	$tw.utils.registerFileType("application/json","utf8",".json");
 	$tw.utils.registerFileType("application/pdf","base64",".pdf",{flags:["image"]});
 	$tw.utils.registerFileType("application/zip","base64",".zip");
-	$tw.utils.registerFileType("image/jpeg","base64",[".jpg",".jpeg"],{flags:["image"]});
+	$tw.utils.registerFileType("image/jpeg","base64",[".jpg",".jpeg", ".JPG"],{flags:["image"]});
 	$tw.utils.registerFileType("image/png","base64",".png",{flags:["image"]});
 	$tw.utils.registerFileType("image/gif","base64",".gif",{flags:["image"]});
 	$tw.utils.registerFileType("image/webp","base64",".webp",{flags:["image"]});
