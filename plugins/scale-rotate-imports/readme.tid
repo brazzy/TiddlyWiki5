@@ -1,0 +1,12 @@
+title: $:/plugins/tiddlywiki/scale-rotate-imports/readme
+
+! Introduction
+
+This plugin scales down imported JPEG images to a sensible size and quality to save space, and autorotates them according to the EXIF orientation.
+
+TODO: 
+
+* Make target width configurable or dependent on the configured width of the tiddlers. 
+* Make quality configurable
+* Make creation of thumbnails configurable.
+

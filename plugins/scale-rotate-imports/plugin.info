@@ -1,0 +1,6 @@
+{
+	"title": "$:/plugins/tiddlywiki/scale-rotate-imports",
+	"name": "Scale and Rotate Imports",
+	"description": "Scales down imported JPEG images to save space and autortates them according to EXIF orientation",
+	"list": "readme"
+}
