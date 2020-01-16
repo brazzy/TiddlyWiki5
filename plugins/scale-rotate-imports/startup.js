@@ -20,7 +20,17 @@ exports.startup = function() {
 			console.log("no scale-rotate-imports action for type ", info.type);
 			return false;
 		}
-		scaleRotate(info);
+		if (typeof jimp == 'undefined') {
+			console.log("loading jimp")
+			var script = document.createElement('script');
+			script.onload = function () {
+				scaleRotate(info);
+			};
+			script.src = "/files/jimp.js";
+			document.head.appendChild(script); 
+		} else {
+			scaleRotate(info);
+		}	
 		return true;
 	});
 };
@@ -29,9 +39,8 @@ exports.startup = function() {
 const MAX_WIDTH = 900;
 
 function scaleRotate(info) {
-	// TODO: load jimp dynamically!
 	
-	console.log("Scaling and rotating", info.file.path)
+	console.log("Scaling and rotating", info.file.name)
 	var reader = new FileReader();
 	reader.onload = async function(event) {
 		try {
@@ -52,6 +61,7 @@ function scaleRotate(info) {
 			result.push({
 				"title": info.file.name,
 				"type": info.type,
+				"created": $tw.utils.stringifyDate(new Date()),
 				"text": scaledContent
 			});
 			
